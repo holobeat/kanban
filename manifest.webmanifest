@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Kanban",
+  "short_name": "Kanban",
+  "description": "A local-first kanban board with draggable categories and tasks, IndexedDB storage, and offline support.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#241008",
+  "theme_color": "#241008",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

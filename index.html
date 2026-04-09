@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#241008">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Kanban</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <div class="app-shell">
+    <main class="board-frame">
+      <header class="app-header">
+        <div class="header-spacer" aria-hidden="true"></div>
+        <h1 id="boardTitle" class="board-title">Kanban</h1>
+        <div class="header-actions">
+          <button id="openHelp" class="icon-button" type="button" aria-label="Open help">
+            <span aria-hidden="true">❔</span>
+          </button>
+          <button id="openBoardSettings" class="icon-button" type="button" aria-label="Open board settings">
+            <span aria-hidden="true">⚙️</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="mobile-tabs" aria-label="Category tabs">
+        <div id="categoryTabs" class="tab-strip"></div>
+      </section>
+
+      <section id="boardColumns" class="board-columns" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <button id="addCategoryFab" class="floating-action" type="button">+ Category</button>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden">
+    <div class="modal-stack">
+      <dialog id="taskModal" class="app-dialog">
+        <form id="taskForm" class="modal-form" method="dialog">
+          <div class="modal-header">
+            <h2 id="taskModalTitle">Task</h2>
+            <button class="icon-button subtle" type="button" data-close-modal="taskModal"
+              aria-label="Close task dialog">✕</button>
+          </div>
+          <label>
+            <span>Title</span>
+            <input id="taskTitleInput" name="title" type="text" maxlength="140" required>
+          </label>
+          <label>
+            <span>Details</span>
+            <textarea id="taskDetailsInput" name="details" rows="4" maxlength="500"></textarea>
+          </label>
+          <label>
+            <span>Category</span>
+            <select id="taskCategorySelect" name="categoryId" required></select>
+          </label>
+          <label>
+            <span>Start date</span>
+            <input id="taskStartInput" name="startDate" type="datetime-local">
+          </label>
+          <label>
+            <span>Due date</span>
+            <input id="taskDeadlineInput" name="deadline" type="datetime-local">
+          </label>
+          <div class="modal-actions">
+            <button id="deleteTaskButton" class="danger ghost" type="button">Delete</button>
+            <button class="ghost" type="button" data-close-modal="taskModal">Cancel</button>
+            <button class="primary" type="submit">Save task</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="categoryModal" class="app-dialog">
+        <form id="categoryForm" class="modal-form" method="dialog">
+          <div class="modal-header">
+            <h2 id="categoryModalTitle">Category</h2>
+            <button class="icon-button subtle" type="button" data-close-modal="categoryModal"
+              aria-label="Close category dialog">✕</button>
+          </div>
+          <label>
+            <span>Caption</span>
+            <input id="categoryCaptionInput" name="caption" type="text" maxlength="80" required>
+          </label>
+          <div class="field-group">
+            <span class="field-label">Background color</span>
+            <div id="categoryColorOptions" class="color-options" role="group" aria-label="Category background colors"></div>
+          </div>
+          <label class="toggle-row">
+            <span>Allow progress</span>
+            <input id="categoryAllowProgressInput" name="allowProgress" type="checkbox">
+          </label>
+          <div class="modal-actions">
+            <button id="deleteCategoryButton" class="danger ghost" type="button">Delete</button>
+            <button class="ghost" type="button" data-close-modal="categoryModal">Cancel</button>
+            <button class="primary" type="submit">Save category</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="boardModal" class="app-dialog">
+        <form id="boardForm" class="modal-form" method="dialog">
+          <div class="modal-header">
+            <h2>Board settings</h2>
+            <button class="icon-button subtle" type="button" data-close-modal="boardModal"
+              aria-label="Close board dialog">✕</button>
+          </div>
+          <label>
+            <span>Board name</span>
+            <input id="boardNameInput" name="boardName" type="text" maxlength="80" required>
+          </label>
+          <label>
+            <span>UI font</span>
+            <select id="uiFontSelect" name="uiFont">
+              <option value="Trebuchet MS, Gill Sans, sans-serif">Trebuchet Sans</option>
+              <option value="Verdana, Geneva, sans-serif">Verdana</option>
+              <option value="Georgia, Times New Roman, serif">Georgia</option>
+              <option value="Palatino Linotype, Book Antiqua, serif">Palatino</option>
+              <option value="Courier New, Courier, monospace">Courier</option>
+            </select>
+          </label>
+          <label>
+            <span>Item font</span>
+            <select id="itemFontSelect" name="itemFont">
+              <option value="Trebuchet MS, Gill Sans, sans-serif">Trebuchet Sans</option>
+              <option value="Verdana, Geneva, sans-serif">Verdana</option>
+              <option value="Georgia, Times New Roman, serif">Georgia</option>
+              <option value="Palatino Linotype, Book Antiqua, serif">Palatino</option>
+              <option value="Courier New, Courier, monospace">Courier</option>
+            </select>
+          </label>
+          <div class="settings-block">
+            <button id="exportBoardButton" class="secondary" type="button">Export board</button>
+            <button id="importBoardButton" class="secondary" type="button">Import board</button>
+            <input id="importBoardInput" class="hidden-file-input" type="file" accept="application/json">
+            <button id="resetTasksAndCategoriesButton" class="danger" type="button">Reset board</button>
+            <button id="resetColorsButton" class="secondary" type="button">Reset colors</button>
+          </div>
+          <div class="modal-actions">
+            <button class="ghost" type="button" data-close-modal="boardModal">Close</button>
+            <button class="primary" type="submit">Save settings</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="resetConfirmModal" class="app-dialog">
+        <form id="resetConfirmForm" class="modal-form" method="dialog">
+          <div class="modal-header">
+            <h2>Reset board</h2>
+            <button class="icon-button subtle" type="button" data-close-modal="resetConfirmModal"
+              aria-label="Close reset confirmation dialog">✕</button>
+          </div>
+          <p class="warning-text">This will erase all tasks and restore the board name, columns, colors, and fonts to their defaults.</p>
+          <div class="modal-actions">
+            <button class="ghost" type="button" data-close-modal="resetConfirmModal">Cancel</button>
+            <button id="confirmResetButton" class="danger" type="submit">Reset board</button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog id="helpModal" class="app-dialog">
+        <form class="modal-form" method="dialog">
+          <div class="modal-header">
+            <h2>How this board works</h2>
+            <button class="icon-button subtle" type="button" data-close-modal="helpModal"
+              aria-label="Close help dialog">✕</button>
+          </div>
+          <div class="help-copy">
+            <p>Create, edit, delete, and move tasks across categories. Tasks can include details, a start date, and a due date.</p>
+            <p>Tasks can be reordered inside a category and dragged to another category with a long press. Categories can also be reordered by long-press dragging their heading on desktop or their tab on mobile.</p>
+            <p>On mobile, drag a task onto a category tab to move it there, then keep dragging within the visible list to fine-tune its position.</p>
+            <p>Use the category dialog to rename a category, choose a preset background color, and control whether due date progress is shown for tasks in that category.</p>
+            <p>Use board settings to rename the board, export or import data, reset the board to its defaults after confirmation, or reset category colors.</p>
+            <p>On desktop, categories are shown in columns. On mobile, categories are shown as tabs.</p>
+            <p>All board data and settings are stored locally in IndexedDB in this browser.</p>
+          </div>
+          <div class="modal-actions">
+            <button class="primary" type="button" data-close-modal="helpModal">Close</button>
+          </div>
+        </form>
+      </dialog>
+    </div>
+  </div>
+
+  <template id="columnTemplate">
+    <article class="category-column">
+      <button class="category-heading" type="button"></button>
+      <div class="column-toolbar">
+        <span class="task-count"></span>
+        <button class="small-button add-task-button" type="button">+ Task</button>
+      </div>
+      <div class="task-list"></div>
+    </article>
+  </template>
+
+  <template id="taskTemplate">
+    <button class="task-card" type="button">
+      <div class="task-card-progress"></div>
+      <div class="task-card-body">
+        <div class="task-card-title"></div>
+        <div class="task-card-details"></div>
+        <div class="task-card-meta"></div>
+      </div>
+    </button>
+  </template>
+
+  <script src="./app.js"></script>
+</body>
+
+</html>
