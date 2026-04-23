@@ -122,6 +122,67 @@ function createId() {
   return `id-${Date.now().toString(36)}-${randomChunk}`;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderInlineMarkdown(value) {
+  if (!value) {
+    return "";
+  }
+
+  const tokens = [];
+  const stash = (html) => {
+    const token = `@@MD${tokens.length}@@`;
+    tokens.push(html);
+    return token;
+  };
+
+  let html = escapeHtml(value);
+  html = html.replace(/`([^`\n]+)`/g, (_, code) => stash(`<code>${code}</code>`));
+  html = html.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, url) => stash(
+    `<span class="md-link">${label}</span><span class="md-link-url"> (${url})</span>`
+  ));
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  html = html.replace(/~~([^~]+)~~/g, "<s>$1</s>");
+  html = html.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  html = html.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+
+  return html.replace(/@@MD(\d+)@@/g, (_, index) => tokens[Number(index)] || "");
+}
+
+function renderMarkdown(value) {
+  if (!value?.trim()) {
+    return "";
+  }
+
+  const blocks = value.trim().split(/\n{2,}/);
+  return blocks.map((block) => {
+    const lines = block.split("\n").map((line) => line.trimEnd());
+
+    if (lines.every((line) => /^[-*+]\s+/.test(line))) {
+      return `<ul>${lines.map((line) => `<li>${renderInlineMarkdown(line.replace(/^[-*+]\s+/, ""))}</li>`).join("")}</ul>`;
+    }
+
+    if (lines.every((line) => /^\d+\.\s+/.test(line))) {
+      return `<ol>${lines.map((line) => `<li>${renderInlineMarkdown(line.replace(/^\d+\.\s+/, ""))}</li>`).join("")}</ol>`;
+    }
+
+    if (lines.every((line) => /^>\s?/.test(line))) {
+      const quote = lines.map((line) => line.replace(/^>\s?/, "")).join("\n");
+      return `<blockquote>${renderMarkdown(quote)}</blockquote>`;
+    }
+
+    return `<p>${lines.map((line) => renderInlineMarkdown(line)).join("<br>")}</p>`;
+  }).join("");
+}
+
 function createSeededRandom(seed) {
   let value = seed >>> 0;
   return () => {
@@ -638,8 +699,14 @@ function renderTask(task, category) {
 
   taskNode.dataset.taskId = task.id;
   taskNode.dataset.categoryId = category.id;
-  title.textContent = task.title;
-  details.textContent = task.details || "Tap to add details.";
+  title.innerHTML = renderInlineMarkdown(task.title);
+  if (task.details.trim()) {
+    details.innerHTML = renderMarkdown(task.details);
+    details.classList.remove("is-empty");
+  } else {
+    details.textContent = "Tap to add details.";
+    details.classList.add("is-empty");
+  }
   progress.style.setProperty("--progress-percent", `${progressPercent ?? 0}%`);
   meta.textContent = formatTaskMeta(task, category.allowProgress, progressPercent);
 

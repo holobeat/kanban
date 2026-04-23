@@ -26,6 +26,7 @@
 html,
 body {
   margin: 0;
+  height: 100%;
   min-height: 100%;
 }
 
@@ -35,6 +36,7 @@ body {
     linear-gradient(180deg, #f5ecd4 0%, #dbc8a5 100%);
   color: var(--text-strong);
   font-family: var(--ui-font);
+  overflow: hidden;
 }
 
 button,
@@ -53,12 +55,14 @@ button {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 0;
   margin: 0;
   gap: 0;
+  overflow: hidden;
 }
 
 .app-header {
@@ -130,7 +134,8 @@ button {
 .board-frame {
   position: relative;
   flex: 1;
-  min-height: 100vh;
+  min-height: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -150,6 +155,7 @@ button {
     inset 0 -8px 24px rgba(0, 0, 0, 0.34),
     inset 0 0 42px rgba(0, 0, 0, 0.12),
     0 24px 48px rgba(72, 42, 21, 0.22);
+  overflow: hidden;
 }
 
 .mobile-tabs {
@@ -283,12 +289,13 @@ button {
 .task-list {
   flex: 1;
   min-height: 160px;
-  display: flex;
-  flex-direction: column;
+  display: block;
   gap: 0;
   border-radius: var(--radius-md);
   background: rgba(255, 249, 229, 0.44);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .task-list.drag-target {
@@ -306,7 +313,7 @@ button {
   padding: 0;
   color: inherit;
   overflow: hidden;
-  touch-action: none;
+  touch-action: manipulation;
 }
 
 .task-card:last-child {
@@ -342,10 +349,61 @@ button {
   color: var(--text-strong);
 }
 
+.task-card-title :first-child {
+  margin-top: 0;
+}
+
+.task-card-title :last-child {
+  margin-bottom: 0;
+}
+
 .task-card-details {
   color: var(--text-soft);
   font-size: 0.94rem;
+  line-height: 1.4;
+}
+
+.task-card-details.is-empty {
   white-space: pre-wrap;
+}
+
+.task-card-title p,
+.task-card-details p,
+.task-card-details ul,
+.task-card-details ol,
+.task-card-details blockquote {
+  margin: 0;
+}
+
+.task-card-details ul,
+.task-card-details ol {
+  padding-left: 1.25rem;
+}
+
+.task-card-details blockquote {
+  padding-left: 0.8rem;
+  border-left: 3px solid rgba(101, 80, 65, 0.28);
+}
+
+.task-card-title code,
+.task-card-details code {
+  padding: 0.08rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(84, 56, 30, 0.1);
+  color: #5a3420;
+  font-size: 0.92em;
+}
+
+.task-card-title .md-link,
+.task-card-details .md-link {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.task-card-title .md-link-url,
+.task-card-details .md-link-url {
+  color: #7d6557;
+  font-size: 0.88em;
 }
 
 .task-card-meta {
@@ -399,10 +457,9 @@ button {
 
 .app-dialog[open] {
   position: fixed;
-  top: 50%;
-  left: 50%;
+  inset: 0;
   margin: 0;
-  transform: translate(-50%, -50%);
+  margin: auto;
 }
 
 .app-dialog::backdrop {
@@ -477,6 +534,10 @@ button {
 
 .modal-form textarea {
   resize: vertical;
+}
+
+#taskDetailsInput {
+  font-family: var(--item-font);
 }
 
 .color-options {
@@ -579,6 +640,24 @@ button {
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+#taskForm .modal-actions {
+  flex-wrap: nowrap;
+}
+
+#taskForm .modal-actions > button {
+  width: auto;
+  flex: 1 1 0;
+}
+
+#categoryForm .modal-actions {
+  flex-wrap: nowrap;
+}
+
+#categoryForm .modal-actions > button {
+  width: auto;
+  flex: 1 1 0;
 }
 
 @media (max-width: 860px) {
